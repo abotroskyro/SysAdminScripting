@@ -46,19 +46,19 @@ $SPOFolderId="<SharePoint Folder Id>"
 
 
 
-    $Resultv4=Invoke-RestMethod  -Uri "https://graph.microsoft.com/v1.0/sites/$SiteId/drive/items/$SPOFolderId/children?`$select=@microsoft.graph.downloadUrl"-Headers $Headers 
+    $GetDownloadLinks=Invoke-RestMethod  -Uri "https://graph.microsoft.com/v1.0/sites/$SiteId/drive/items/$SPOFolderId/children?`$select=@microsoft.graph.downloadUrl"-Headers $Headers 
   
-   $Resultv3= Invoke-RestMethod  -Uri "https://graph.microsoft.com/v1.0/sites/$SiteId/drive/items/$SPOFolderId/children?`$select=name,lastModifiedDateTime,createdBy,id" -Headers $Headers 
+   $Requests= Invoke-RestMethod  -Uri "https://graph.microsoft.com/v1.0/sites/$SiteId/drive/items/$SPOFolderId/children?`$select=name,lastModifiedDateTime,createdBy,id" -Headers $Headers 
     $CheckOrder= Invoke-RestMethod  -Uri "https://graph.microsoft.com/v1.0/sites/$SiteId/drive/items/$SPOFolderId/children" -Headers $Headers
    
-     $FileDownloadLinksArray=@($Resultv4.value.'@microsoft.graph.downloadUrl')
+     $FileDownloadLinksArray=@($GetDownloadLinks.value.'@microsoft.graph.downloadUrl')
   
 
   $Rebuild=@()
   $AccountRequestsMatrix=@()
 
 
-     $Resultv3.value | ForEach-Object {
+     $Requests.value | ForEach-Object {
         
         
 $AccountRequestsMatrix+= New-Object -TypeName psobject -Property @{FileName="$($_.name)"; fileid="$($_.id)"; creator="$($_.createdBy.user.email)"}
@@ -83,7 +83,7 @@ $AccountRequestsMatrix[$i] | Add-Member -MemberType NoteProperty -Name "dlurl" -
     $AzureTempDir= $env:TEMP
     $i=0;
 
-$MatchingVals= $Resultv3.value | Select id, name
+$MatchingVals= $Requests.value | Select id, name
 
 
    <#
@@ -131,15 +131,15 @@ $AccountRequestsMatrix | ForEach-Object {
  $DeferredCSVFileName="$($buildFileName[0])Deferredrequest$x"
  $DeferredCSVFileName= $DeferredCSVFileName+$FileNameTime
 
- #Write-Output $DeferredCSVFileName
+
  $AccountRequestCreator=$_.creator
 ###skip over CSVs that are for deferred time and put them into new csv to upload to sharepoint
+
 Import-Csv "$AzureTempDir\$($_.FileName)" | Where-Object {(get-date $date) -lt (get-date $_.CreateTime) }|`
 ForEach-Object {
     Write-Output $date
     
- #Export-Csv -Path "$env:temp\$($_.DisplayName)DR" -NoTypeInformation 
-# Write-Output "$($_)"
+
  Write-Output "$($_.CreateTime)"
  Write-Output "$($_.UserName), $($_.FirstName), $($_.LastName), $($_.CreateTime)  $($_.PersonalEmail) $($_.Developer)  FUTURE"
  #$AccountRequestsMatrix | ForEach-Object { Where {Import-Csv "$AzureTempDir\$($_.FileName)" | ForEach-Object {Where { $date -ge $_.CreateTime}}} |`
@@ -188,10 +188,11 @@ Invoke-RestMethod -Uri  "https://graph.microsoft.com/v1.0/sites/$SiteId/drive/it
 
 
     Import-Csv "$AzureTempDir\$($_.FileName)" | Where-Object {(get-date $date) -eq (get-date $_.CreateTime)} |`
+    
     ForEach-Object {
-        ##Import CSV for parsing, names of files are same as sp
+       
 Write-Output "$($_.UserName), $($_.FirstName), $($_.LastName), $($_.CreateTime) $($_.PersonalEmail) $($_.Developer) CURRENT" ##Create user
-#Write-Output "All these requests in file $($_.FileName) are equal to  $($_.CreateTime)"
+
 #######################################CREATE USER, ASSIGN LICENSES, ETC.###################
 $GetNewUserDomain=$_.UserName.split("@")
 $GetNewUserDomain=$GetNewUserDomain[1]
