@@ -1,7 +1,7 @@
  Connect-MgGraph -Scopes "DeviceManagementConfiguration.ReadWrite.All,DeviceManagementServiceConfig.ReadWrite.All,DeviceManagementApps.Read.All,DeviceManagementManagedDevices.Read.All,DeviceManagementManagedDevices.ReadWrite.All" -Environment USGov -TenantId <>
 
 # Loop through each JSON file in the directory
-Get-ChildItem -Path "C:\Users\AndrewBotros\Documents\shellscriptmigration" -Filter "*_shell.json" | ForEach-Object {
+Get-ChildItem -Path "$(pwd)" -Filter "*_shell.json" | ForEach-Object {
 
     # Read the JSON file into a PowerShell object
     $json = Get-Content $_.FullName -Raw | ConvertFrom-Json
