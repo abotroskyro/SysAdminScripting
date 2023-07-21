@@ -1,0 +1,16 @@
+        <key>Label</key>
+	<string>com.org.logstash</string>
+	<key>ProgramArguments</key>
+	<array>
+	<string>/usr/local/bin/logstash/bin/logstash</string>
+	<string>-f</string>
+	<string>/usr/local/bin/logstash/config/Azure-Sentinel.conf</string>
+	</array>
+	<key>StandardOutPath</key> 
+        <string>/var/log/logstash-stdout.log</string>
+        <key>StandardErrorPath</key>
+        <string>/var/log/logstash-stderr.log</string>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>

@@ -1,0 +1,16 @@
+<key>Label</key>
+ <string>com.elasticsearch.filebeat</string>
+ <key>ProgramArguments</key>
+ <array>
+ <string>/usr/local/bin/filebeat/filebeat</string>
+ <string>-c</string>
+ <string>/usr/local/bin/filebeat/filebeat.yml</string>
+ </array>
+<key>StandardOutPath</key>
+        <string>/var/log/filebeat-stdout.log</string>
+        <key>StandardErrorPath</key>
+        <string>/var/log/filebeat-stderr.log</string>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>

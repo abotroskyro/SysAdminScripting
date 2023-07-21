@@ -17,3 +17,8 @@ This folder contains 4 sets of scripts. These are traditionally supposed to be u
 4. Intune Config Profiles (those not ES,ADMX, or SettingsCatalog)
 
 All of these scripts use the MS Graph API, and were used with interactive login. Most if not all of these scripts can be modified for app/service principal based authentication. 
+
+## MacOS
+This folder contains a series of scripts used for Application Whitelisting/Blacklisting and sending logs to Intune. 
+## WDAConAVD
+This folder contains a series of files and scripts that enable and enforce a Windows Defender Application Control policy on multi-session enteprise Azure Virtual Desktops (which cannot receive custom WDAC policies as other devices such as a physical laptop can)

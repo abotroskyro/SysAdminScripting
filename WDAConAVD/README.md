@@ -1,0 +1,4 @@
+# WDAConAVD
+Due to unfortunate limitations in Intune's MDM capabilities on multi-session Azure Virtual Desktops, custom configuration profiles, and other templates are not available. The only way to enforce a custom WDAC policy is through a script. Sounds simple, right? Sort of. Intune's script execution occurs in a 32 bit environment, so the traditional system path where active CIPolicies go is not available. Additionally, to enforce and enable the policy the new CiTool.exe is necessary. The components in this project are designed to be built and deployed as an .intunewin. 
+## wdacsetup.ps1
+This script takes a CIP (generated using WDAC Wizard, or other method) and places the CIP into the correct directory for the 32 bit userland of the Intune scripting agent, Sysnative, as opposed to System32 and then inside the CiPolicies/Active folder.. It then uses the CiTool.exe to enforce and enable (refresh) the policy.

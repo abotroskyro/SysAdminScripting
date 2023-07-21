@@ -1,0 +1,1 @@
+powershell -Ex Bypass -windowstyle Hidden -file wdacsetup.ps1

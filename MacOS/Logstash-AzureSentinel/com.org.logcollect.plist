@@ -1,0 +1,21 @@
+<key>Label</key>
+ <string>com.org.logcollection</string>
+ <key>ProgramArguments</key>
+ <array>
+<string>log</string>                
+<string>stream</string>
+	<string>--predicate</string>
+<string>(eventMessage CONTAINS "Authentication failed")</string>
+<string>--style</string>
+<string>syslog</string>
+        </array>
+        <key>StandardOutPath</key> 
+        <string>/var/log/logcollect-stdout.log</string>
+        <key>StandardErrorPath</key>
+        <string>/var/log/logcollect-stderr.log</string>
+	<key>RunAtLoad</key>
+	<true/>
+ <key>KeepAlive</key>
+ <true/>
+<key>PayloadRemovalDisallowed</key>
+<true/>
