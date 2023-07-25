@@ -22,3 +22,6 @@ All of these scripts use the MS Graph API, and were used with interactive login.
 This folder contains a series of scripts used for Application Whitelisting/Blacklisting and sending logs to Intune. 
 ## WDAConAVD
 This folder contains a series of files and scripts that enable and enforce a Windows Defender Application Control policy on multi-session enteprise Azure Virtual Desktops (which cannot receive custom WDAC policies as other devices such as a physical laptop can)
+
+## IaC
+This folder contains some of my work with IaC
