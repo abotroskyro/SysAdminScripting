@@ -2,10 +2,11 @@
 
 $spSecret = Get-AutomationVariable -Name AutoUserSecret #Encrypted Variable with client secret
 
-
-# Get the service principal connection details
-$spConnection = Get-AutomationConnection -Name AzureRunAsConnection
-
+Connect-AzAccount -Identity
+$token = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com/").token
+$webtoken = $token
+$token = ConvertTo-SecureString "$token" -AsPlainText -Force
+Connect-MgGraph -AccessToken $token
 
 
     
@@ -16,29 +17,9 @@ $date= Get-Date -Format "M/dd/yyyy"
 Write-Output $currentDate
 
 # Set your tenant name
-$tenantName = "<TENANT NAME>"
+$tenantName = "mytenant.onmicrosoft.com"
 
-$Body = @{
-    'tenant' = $spConnection.TenantId
-    'client_id' = "<CLIENT ID>"
-    'scope' = 'https://graph.microsoft.com/.default'
-    'client_secret' = $spSecret
-    'grant_type' = 'client_credentials'
-}
 
-# Assemble a hashtable for splatting parameters, for readability
-# The tenant id is used in the uri of the request as well as the body
-$Params = @{
-    'Uri' = "https://login.microsoftonline.com/$MyTenantId/oauth2/v2.0/token"
-    'Method' = 'Post'
-    'Body' = $Body
-    'ContentType' = 'application/x-www-form-urlencoded'
-}
-
-$AuthResponse = Invoke-RestMethod @Params
-$Headers = @{
-    'Authorization' = "Bearer $($AuthResponse.access_token)"
-}
 $GetTop=@()
 $SiteId="<SharePoint SiteId"
 $SPOFolderId="<SharePoint Folder Id>"
@@ -46,10 +27,10 @@ $SPOFolderId="<SharePoint Folder Id>"
 
 
 
-    $GetDownloadLinks=Invoke-RestMethod  -Uri "https://graph.microsoft.com/v1.0/sites/$SiteId/drive/items/$SPOFolderId/children?`$select=@microsoft.graph.downloadUrl"-Headers $Headers 
+    $GetDownloadLinks=Invoke-GraphRequest  -Uri "https://graph.microsoft.com/v1.0/sites/$SiteId/drive/items/$SPOFolderId/children?`$select=@microsoft.graph.downloadUrl"
   
-   $Requests= Invoke-RestMethod  -Uri "https://graph.microsoft.com/v1.0/sites/$SiteId/drive/items/$SPOFolderId/children?`$select=name,lastModifiedDateTime,createdBy,id" -Headers $Headers 
-    $CheckOrder= Invoke-RestMethod  -Uri "https://graph.microsoft.com/v1.0/sites/$SiteId/drive/items/$SPOFolderId/children" -Headers $Headers
+   $Requests= Invoke-GraphRequest  -Uri "https://graph.microsoft.com/v1.0/sites/$SiteId/drive/items/$SPOFolderId/children?`$select=name,lastModifiedDateTime,createdBy,id" 
+    $CheckOrder= Invoke-GraphRequest  -Uri "https://graph.microsoft.com/v1.0/sites/$SiteId/drive/items/$SPOFolderId/children" 
    
      $FileDownloadLinksArray=@($GetDownloadLinks.value.'@microsoft.graph.downloadUrl')
   
@@ -169,7 +150,7 @@ $_ | Export-Csv "$AzureTempDir\$DeferredCSVFileName.csv"  -Encoding UTF8 -NoType
 $DeferredRequestUpload="$AzureTempDir\$DeferredCSVFileName.csv"
 if(Test-Path "$AzureTempDir\$DeferredCSVFileName.csv") {
 Write-Output $DeferredRequestUpload
-Invoke-RestMethod -Uri  "https://graph.microsoft.com/v1.0/sites/$SiteId/drive/items/$SPOFolderId`:/$DeferredCSVFileName.csv:/content"-Headers $Headers -ContentType 'multipart/form-data' -Method PUT -InFile $DeferredRequestUpload
+Invoke-GraphRequest -Uri  "https://graph.microsoft.com/v1.0/sites/$SiteId/drive/items/$SPOFolderId`:/$DeferredCSVFileName.csv:/content"-ContentType 'multipart/form-data' -Method PUT -InFile $DeferredRequestUpload
 }
 
 
@@ -214,13 +195,8 @@ if ($GetNewUserDomain -like "parentco") {
 }
 
 Write-Output $UserCompany
-Connect-MgGraph -TenantId $spConnection.TenantId `
-    -ClientID $spConnection.ApplicationId `
-    -CertificateThumbprint $spConnection.CertificateThumbprint
-    Get-MgContext
 
-Select-MgProfile -Name "beta"
-#New-MgUserAuthenticationPhoneMethod -UserId $_.UserName -phoneType "mobile" -phoneNumber $_.MobilePhone
+
 $PasswordProfile = @{}
 $PasswordProfile["Password"]= ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!?.;,._".ToCharArray() | Get-random -Count 50) -join ""
 $UserTempPass= $PasswordProfile["Password"]
@@ -286,7 +262,7 @@ $TestUserBody =
 
 
 $FromAddress="<ADMIN OR DAEMON UPN"
-Invoke-RestMethod -Uri "https://graph.microsoft.com/v1.0/users/$FromAddress/sendMail" -Body $TestUserBody -Method POST -ContentType 'application/json' -Headers $Headers
+Invoke-GraphRequest -Uri "https://graph.microsoft.com/v1.0/users/$FromAddress/sendMail" -Body $TestUserBody -Method POST -ContentType 'application/json' 
 
 
 
@@ -378,7 +354,7 @@ $Confirm2=""
 
 Start-Sleep -s 30
 $FromAddress="<ADMIN UPN>"
-Invoke-RestMethod -Uri "https://graph.microsoft.com/v1.0/users/$FromAddress/sendMail" -Body $ConfirmMailBody -Method POST -ContentType 'application/json' -Headers $Headers
+Invoke-GraphRequest -Uri "https://graph.microsoft.com/v1.0/users/$FromAddress/sendMail" -Body $ConfirmMailBody -Method POST -ContentType 'application/json' 
     
 
 ######################################MESSAGE NEW USER AT AZURE AD EMAIL WITH ATLASSIAN LINK###############
@@ -409,7 +385,7 @@ $OnBoardEmailBody =
 }
 "@
 
-Invoke-RestMethod -Uri "https://graph.microsoft.com/v1.0/users/$FromAddress/sendMail" -Body $OnBoardEmailBody -Method POST -ContentType 'application/json' -Headers $Headers
+Invoke-GraphRequest -Uri "https://graph.microsoft.com/v1.0/users/$FromAddress/sendMail" -Body $OnBoardEmailBody -Method POST -ContentType 'application/json' 
 
 
 #########################################Add Groups, Calendars, etc. here#######################################
@@ -503,7 +479,7 @@ $MoveFolderBody= @{ ##setup body to send to graph endpoint to move folder
 $MoveFolderBody = $MoveFolderBody | ConvertTo-Json #convert to json so graph api can parse
 #Write-Output $MoveFolderBody
 #-ContentType 'application/json'
-$Resultv6=Invoke-RestMethod -Uri "https://graph.microsoft.com/v1.0/sites/$SiteId/drive/items/$($_.fileid)" -Method PATCH -Body $MoveFolderBody -Headers $Headers -ContentType 'application/json'
+$DeletionResult=Invoke-GraphRequest -Uri "https://graph.microsoft.com/v1.0/sites/$SiteId/drive/items/$($_.fileid)" -Method PATCH -Body $MoveFolderBody -ContentType 'application/json'
 } #^^ issue patch request with specified body and patch /sites/{site-id}/drive/items/{item-id}
 
 
