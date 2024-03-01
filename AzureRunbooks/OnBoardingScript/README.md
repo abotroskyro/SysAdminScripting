@@ -3,3 +3,4 @@
 2. This script is designed to take a specifically formatted CSV with a users First Name, Last Name, UPN, Time of Creation (UTC),  Phone Number (SMS 2FA),Groups to add them to, and if they are a Developer.
 3. The CSV is placed into a specific SharePoint Site and folder, and every hour, the script will check for a CSV, and if it's time to create the account, it will create the account, and then move the CSV to another folder within that same SharePoint Site.
 4. The behavior of the script is to create the account, prefill in SMS 2FA, send the user a randomly generated password in an email, send HR an email confirming the user was created, and then send the newly created user a welcome email.
+Note: This script uses a System Managed Identity in an Azure Runbook. For more information on that as well as giving System Managed Identities access to SPO, refer to the README in AzureRunbooks. 
