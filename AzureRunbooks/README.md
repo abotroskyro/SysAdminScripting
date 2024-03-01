@@ -1,5 +1,5 @@
 # Azure Runbooks
-
+This directory contains two scripts, a user onboarding script, and a script that publishes a roster. Both of these run in Azure Runbooks, and both use System Managed Identities. You will need to assign permissions to your System Managed Identities, for information on that see below. 
 ## System Managed Identity Runbook
 1.	Create Azure Automation Account
 2.	Go to Automation Accounts and select the Automation Account in question
