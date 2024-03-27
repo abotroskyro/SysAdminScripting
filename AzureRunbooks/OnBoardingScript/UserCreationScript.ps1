@@ -81,9 +81,6 @@ $MatchingVals= $Requests.value | Select id, name
     6. Remove all files from folder and put in ApprovedRequests Folder
     #>
 
-
-##IMPORTANT, 'DELETE' OBJECTS THAT ARE FROM DEFERRED REQUESTS MADE FROM PREVIOUS ITERATION IF APPLICABLE
-#$AccountRequestsMatrix = $AccountRequestsMatrix | where {$_.FileName -notmatch "Deferred"}
 Write-Output $AccountRequestsMatrix
 Write-Output "Breakpoint, sleeping 15s"
 Start-Sleep -s 15
@@ -153,22 +150,7 @@ Write-Output $DeferredRequestUpload
 Invoke-GraphRequest -Uri  "https://graph.microsoft.com/v1.0/sites/$SiteId/drive/items/$SPOFolderId`:/$DeferredCSVFileName.csv:/content"-ContentType 'multipart/form-data' -Method PUT -InFile $DeferredRequestUpload
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    Import-Csv "$AzureTempDir\$($_.FileName)" | Where-Object {(get-date $date) -eq (get-date $_.CreateTime)} |`
+Import-Csv "$AzureTempDir\$($_.FileName)" | Where-Object {(get-date $date) -eq (get-date $_.CreateTime)} |`
     
     ForEach-Object {
        
@@ -233,18 +215,9 @@ Set-MgUserLicense -UserId $NewUserDetails.UserPrincipalName -addlicenses @{SkuId
 #Update-MgUser -UserId $NewUserDetails.UserPrincipalName -UsageLocation "US"
 #>
 
-#TODO 9-23-2021
-#1. Get SKU ID for EMS E5, Business Standard
-#2. Figure out password dilemma
-#3. Test user creation using what if and see if I can use that to validate the correctness of the info in the CSV?
 
-#b05e124f-c7cc-45a0-a6aa-8cf78c946968 ems e5 sku id
-#
 Write-Output "Notifying Creator and CCing HR"
 $NotifyTo=""
-###TODO 9-28
-#AFTER CONFIRMING EVERYTHING WORKS, CHANGE THE TORECIPIENT TO A VARIABLE AND SEND IT TO CREATOR AND CC HR
-#Maybe get rid of extra CC email address field?
 $TestUserBody =
 @"
 {
@@ -263,37 +236,6 @@ $TestUserBody =
 
 $FromAddress="<ADMIN OR DAEMON UPN"
 Invoke-GraphRequest -Uri "https://graph.microsoft.com/v1.0/users/$FromAddress/sendMail" -Body $TestUserBody -Method POST -ContentType 'application/json' 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#############################################################################################
-
-###################################NOTIFY NEW USER OF ACCOUNT CREATION AND SEND THEM PASSWORD################
-
-
-
-
-
-
-
-
-
-
-
-############################################################################################################
 
 
 
@@ -339,17 +281,6 @@ $ConfirmMailBody =
 "saveToSentItems": "true"
 }
 "@
-
-
-
-
-
-
-
-
-
-$Confirm2=""
-
 
 
 Start-Sleep -s 30
@@ -405,69 +336,11 @@ Add-AzureADGroupMember -ObjectId $GetGroupIDs -RefObjectId $NewUserDetails.id
 
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#########################################Add Groups, Calendars, etc. here#######################################
-
-
 #######################################################################################################
 
   }#END FOR OBJECT  CURRENT REQUESTS
 
-
-
-
-
-
-
-
-
-#/sites/{site-id}/drive/items/{parent-id}:/{filename}:/content
-
-
-
-
-
-
-####move future requests from azure temp directory to the AccountRequests Folder to be picked up at later date
-
-
    } #######end outer for each object for ALL REQUESTS
-
-
-
-
-
-
-
-
-
-
-   #############This block below moves ALL files, regardless of account creation date, as deferred requests will simply
-   #be remade as a separate and single file for each csv with future requests, 
-#these list of files are files that were grabbed in the beginning of the program 
-
-#to prevent uploads from the several lines above from being moved to the 'finished' folder
 
 
 $AccountRequestsMatrix | ForEach-Object { ##get info of sharepoint files to iterate over and move CLEAN UP)
@@ -477,11 +350,8 @@ $MoveFolderBody= @{ ##setup body to send to graph endpoint to move folder
   
 } 
 $MoveFolderBody = $MoveFolderBody | ConvertTo-Json #convert to json so graph api can parse
-#Write-Output $MoveFolderBody
-#-ContentType 'application/json'
 $DeletionResult=Invoke-GraphRequest -Uri "https://graph.microsoft.com/v1.0/sites/$SiteId/drive/items/$($_.fileid)" -Method PATCH -Body $MoveFolderBody -ContentType 'application/json'
-} #^^ issue patch request with specified body and patch /sites/{site-id}/drive/items/{item-id}
-
+} 
 
 
 
